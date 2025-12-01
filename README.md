@@ -321,3 +321,21 @@ Part C: Cleanup
 Stop Container: sudo docker stop <container-id>
 
 Terminate Instance: AWS Console -> Instance State -> Terminate.
+
+
+
+
+
+
+
+
+
+
+
+apt-get install sudo
+sudo apt-get install docker.io
+clone your project
+navigate to that folder(cd project folder cloned name)
+sudo docker build -t image_name .
+sudo docker run -d -p 80:80 image_name
+sudo docker images
