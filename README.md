@@ -1,341 +1,440 @@
-Here is a comprehensive README.md file covering Experiments 8 through 12, derived strictly from the provided laboratory record. This guide details the steps for Jenkins automation, Scripted Pipelines, Minikube/Nagios monitoring, CI/CD with Webhooks/Email, and AWS Cloud Deployment.
-
-Software Engineering Lab Record (Experiments 8 - 12)
-This repository contains the documentation and step-by-step procedures for advanced Software Engineering lab experiments, focusing on DevOps tools including Jenkins, Docker, Kubernetes (Minikube), Nagios, and AWS EC2.
-
-Table of Contents
-Experiment 8: Jenkins Automation (Manual Pipelines)
-
-Experiment 9: Pipeline Creation using Script
-
-Experiment 10: Working with Minikube and Nagios
-
-Experiment 11: Jenkins CI/CD (Webhooks & Email)
-
-Experiment 12: AWS EC2 Deployment
-
-Experiment 8: Jenkins Automation
-Objective: Hands-on practice on manual creation of Jenkins pipelines using Maven projects (Java and Web) from GitHub.
-
-Part A: Maven Java Project Automation
-1. Create Build Job (MavenJava_Build)
-
-Type: Freestyle Project.
-
-Source Code Management: Git (Enter Repository URL).
-
-Build Steps: Invoke top-level Maven targets.
-
-Goals: clean install
-
-Post-build Actions:
-
-Archive the artifacts: **/*
-
-Build other projects: MavenJava_Test (Trigger only if build is stable).
-
-2. Create Test Job (MavenJava_Test)
-
-Type: Freestyle Project.
-
-Build Environment: Check Delete workspace before build starts.
-
-Build Steps:
-
-Copy artifacts from another project:
-
-Project Name: MavenJava_Build
-
-Artifacts to copy: **/*
-
-Invoke top-level Maven targets:
-
-Goals: test
-
-Post-build Actions: Archive the artifacts (**/*).
-
-3. Create Pipeline View
-
-Click + -> Name: MavenJava_Pipeline -> Select Build Pipeline View.
-
-Layout: Based on upstream/downstream relationship.
-
-Initial Job: MavenJava_Build.
-
-Run: Trigger the pipeline and verify green status across all stages.
-
-Part B: Maven Web Project Automation
-1. Create Build Job (MavenWeb_Build)
-
-Type: Freestyle Project.
-
-Source Code Management: Git (Enter Web Project Repo URL).
-
-Build Steps: Maven Goals -> clean install.
-
-Post-build Actions:
-
-Archive artifacts (**/*).
-
-Build other projects: MavenWeb_Test.
-
-2. Create Test Job (MavenWeb_Test)
-
-Type: Freestyle Project.
-
-Build Environment: Delete workspace before build starts.
-
-Build Steps:
-
-Copy artifacts from MavenWeb_Build.
-
-Maven Goals -> test.
-
-Post-build Actions:
-
-Archive artifacts.
-
-Build other projects: MavenWeb_Deploy.
-
-3. Create Deploy Job (MavenWeb_Deploy)
-
-Type: Freestyle Project.
-
-Build Environment: Delete workspace before build starts.
-
-Build Steps: Copy artifacts from MavenWeb_Test.
-
-Post-build Actions: Deploy war/ear to a container.
-
-WAR/EAR files: **/*.war
-
-Context path: Webpath
-
-Container: Tomcat 9.x Remote.
-
-Credentials: admin / 1234.
-
-Tomcat URL: http://localhost:8085/
-
-4. Pipeline View
-
-Create Build Pipeline View -> Initial Job: MavenWeb_Build.
-
-Run pipeline and verify output at http://localhost:8085/Webpath.
-
-Experiment 9: Pipeline Creation using Script
-Objective: Create and evaluate a Jenkins pipeline using Groovy script (Jenkinsfile).
-
-Part A: Scripted Pipeline Configuration
-New Item: Pipeline Project (Name: Jenkins_Java_using_Script).
-
-Definition: Pipeline script.
-
-Script:
-
-Groovy
-
-pipeline {
-    agent any
-    tools {
-        maven 'MAVEN_HOME' // Ensure Global Tool Config matches this name
+LEAKY BUCKET
+-----------
+import java.util.Scanner;
+public class Leaky {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter bucket size: ");
+        int size = sc.nextInt();
+        System.out.print("Enter leak rate: ");
+        int rate = sc.nextInt();
+        System.out.print("Enter number of cycles: ");
+        int cycles = sc.nextInt();
+        int bucket = 0;
+        while (cycles-- > 0) {
+            System.out.print("\nEnter packets arriving: ");
+            int in = sc.nextInt();
+            if (bucket + in > size) {
+                int dropped = (bucket + in) - size;
+                System.out.println("Bucket overflow! Packets dropped: " + dropped);
+                bucket = size;  // bucket becomes full
+            } else {
+                bucket += in;
+            }
+            System.out.println("Packets in bucket before leaking: " + bucket);
+            int sent = Math.min(bucket, rate);
+            bucket -= sent;
+            System.out.println("Packets sent (leaked): " + sent);
+            System.out.println("Packets left after leaking: " + bucket);
+        }
+        sc.close();
     }
-    stages {
-        stage('git repo & clean') {
-            steps {
-                // bat "rmdir /s /q mavenjava" // Optional cleanup
-                bat "git clone <YOUR_GITHUB_LINK>"
-                bat "mvn clean -f mavenjava/pom.xml"
+}
+
+XOR WITH 0
+----------
+import java.util.Scanner;
+public class XorString {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a string: ");
+        String str = sc.nextLine();
+        for (int i = 0; i < str.length(); i++) {
+            char result = (char)(str.charAt(i) ^ 0); // XOR with 0 does not change the character
+            System.out.print(result);
+        }
+        sc.close();
+    }
+}
+
+XOR , AND WITH 127
+------------------
+import java.util.Scanner;
+public class Bitwise127 {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a string: ");
+        String str = sc.nextLine();
+        System.out.println("\nOriginal String: " + str);
+        System.out.println("Character\tASCII\tAND(127)\tXOR(127)");
+        System.out.println("---------------------------------------------");
+        for (int i = 0; i < str.length(); i++) {
+            char ch = str.charAt(i);
+            int ascii = (int) ch;
+            int andResult = ch & 127;   // Bitwise AND
+            int xorResult = ch ^ 127;   // Bitwise XOR
+            System.out.println("   " + ch + "\t\t" + ascii + "\t   " +
+                               andResult + "\t\t   " + xorResult);
+        }
+        sc.close();
+    }
+}
+
+PING SERVICE
+------------
+import java.net.InetAddress;
+import java.util.Scanner;
+public class ping {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter hostname: ");
+        String host = sc.next();
+        try {
+            InetAddress inet = InetAddress.getByName(host);
+            System.out.println("Pinging " + host + "...");
+            boolean reachable = inet.isReachable(5000); // 5 sec timeout
+            if (reachable) {
+                System.out.println("Host is reachable");
+                System.out.println("IP Address: " + inet.getHostAddress());
+            } else {
+                System.out.println("Host is NOT reachable");
+            }
+        } catch (Exception e) {
+            System.out.println("Invalid Host");
+        }
+        sc.close();
+    }
+}
+
+DNS
+---
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Scanner;
+public class SimpleDNS {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Welcome to Simple DNS Resolver!");
+        System.out.println("Type a domain name to get its IP address.");
+        System.out.println("Type 'exit' to stop the program.\n");
+        while (true) {
+            System.out.print("Domain: ");
+            String domain = sc.nextLine();
+            if (domain.equalsIgnoreCase("exit")) {
+                System.out.println("Exiting DNS Resolver. Goodbye!");
+                break;
+            }
+            try {
+                // Resolve domain
+                InetAddress[] addresses = InetAddress.getAllByName(domain);
+                System.out.println("IP Addresses for " + domain + ":");
+                for (InetAddress addr : addresses) {
+                    System.out.println(" - " + addr.getHostAddress());
+                }
+
+            } catch (UnknownHostException e) {
+                System.out.println("Could not resolve domain: " + domain);
             }
         }
-        stage('install') {
-            steps {
-                bat "mvn install -f mavenjava/pom.xml"
+
+        sc.close();
+    }
+}
+
+DIJKSTRA
+--------
+import java.util.*;
+public class Dijkstra {
+    static final int INF = 999;
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[][] g = new int[n][n];
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++)
+                g[i][j]=sc.nextInt();
+        int src = sc.nextInt();
+        int[] dist = new int[n];
+        boolean[] vis = new boolean[n];
+        Arrays.fill(dist, INF);
+        dist[src] = 0;
+        for (int k=0;k<n-1;k++) {
+            int u=-1, min=INF;
+            for (int i=0;i<n;i++)
+                if (!vis[i] && dist[i]<min){min=dist[i];u=i;}
+            vis[u]=true;
+            for (int v=0;v<n;v++)
+                if (!vis[v] && g[u][v]!=INF && dist[u]+g[u][v]<dist[v])
+                    dist[v]=dist[u]+g[u][v];
+        }
+        for (int i=0;i<n;i++)
+            System.out.println(dist[i]);
+    }
+}
+
+DVR
+---
+import java.util.Scanner;
+public class Dvr {
+    public static int INF = 999;
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Number of Nodes:");
+        int n = sc.nextInt();
+        int [][]cost = new int[n][n];
+        int [][]dist = new int[n][n];
+        int [][]nextHop = new int[n][n];
+        System.out.println("ENter the Cost Matrix:");
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                cost[i][j]=sc.nextInt();
+                dist[i][j]=sc.nextInt();
+                if(i!=j && cost[i][j] !=INF){
+                    nextHop[i][j]=j;
+                }
             }
         }
-        stage('test') {
-            steps {
-                bat "mvn test -f mavenjava/pom.xml"
+        boolean updated;
+        do { 
+            updated=false;
+            for (int i = 0; i <n; i++) {
+                for(int j=0; j<n;j++){
+                    for(int k=0;k<n;k++){
+                        if(dist[i][j]>cost[i][k]+dist[k][j]){
+                            dist[i][j]=cost[i][k]+dist[k][j];
+                            nextHop[i][j]= k;
+                            updated=true;
+                        }
+                    }
+                }
             }
-        }
-        stage('package') {
-            steps {
-                bat "mvn package -f mavenjava/pom.xml"
+        } while (updated);
+        System.out.println("Final Table:");
+        for(int i=0;i<n;i++){
+            System.out.println("Router"+i+":");
+            for(int j=0;j<n;j++){
+                System.out.printf("To %d -> cost: %d, nexthop = %d\n ",j,dist[i][j],nextHop[i][j]);
             }
         }
     }
 }
-Part B: Build Triggers
-Build Periodically:
 
-Syntax: H * * * * (Runs once every hour).
+SUBNET AND BROADCAST TREE
+-------------------------
+import java.util.Scanner;
+
+public class SimpleSubnetCalc {
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter IP (e.g., 192.168.1.0): ");
+        String ip = sc.nextLine();
+
+        System.out.print("Enter prefix length (e.g., 26): ");
+        int prefix = sc.nextInt();
+
+        String[] parts = ip.split("\\.");
+        int a = Integer.parseInt(parts[0]);
+        int b = Integer.parseInt(parts[1]);
+        int c = Integer.parseInt(parts[2]);
+        int d = Integer.parseInt(parts[3]);
+
+        // block size is 2^(8 - host bits)
+        int blockSize = (int)Math.pow(2, 8 - (prefix - 24));
+
+        System.out.println("\nSubnet block size = " + blockSize + " addresses");
+        System.out.println("\nCalculated Subnets:");
+
+        for (int i = 0; i < 256; i += blockSize) {
+            int network = i;
+            int broadcast = i + blockSize - 1;
+
+            int firstHost = (blockSize == 1 ? network : network + 1);
+            int lastHost  = (blockSize == 1 ? broadcast : broadcast - 1);
+
+            System.out.println("\nSubnet:");
+            System.out.println("Network Address: " + a + "." + b + "." + c + "." + network);
+            System.out.println("Broadcast Address: " + a + "." + b + "." + c + "." + broadcast);
+            System.out.println("First Host: " + a + "." + b + "." + c + "." + firstHost);
+            System.out.println("Last Host: " + a + "." + b + "." + c + "." + lastHost);
+
+            if (broadcast >= 255) break;
+        }
+    }
+}
+
+
+
+SLIDING WINDOW PROTOCOL+GO-BACK N
+----------------------------------
+import java.util.*;
+class GoBackN{
+ public static void main(String[] args){
+ int totalFrames=10;
+ int windowsize =4;
+ int base =0;
+ Random rand = new Random();
+ System.out.println("Go-BACK-N");
+ System.out.println("Total frames = 10, window size =4");
+ while(base<totalFrames){
+ System.out.println("Sending Frames");
+ for(int i=base;i<base+windowsize && i<totalFrames;i++){
+ System.out.println("Sent Frame "+i);
+ }
+ boolean acklost = rand.nextInt(5)==0;
+ if(acklost){
+ System.out.println("ack from frame "+base+" lost");
+ System.out.println("sender waits");
+ System.out.println("Sender resend from frame "+base);
+ }else{
+ System.out.println("Ack Received "+base);
+ base++;
+ System.out.println("New base: "+base);
+ }
+ }
+ System.out.println("All frames sent successfully");
+ }
+}
+
+CHAR AND BIT STUFFING
+---------------------
+import java.util.Scanner;
+
+public class Stuffing {
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("1. Character Stuffing");
+        System.out.println("2. Bit Stuffing");
+        System.out.print("Enter choice: ");
+        int choice = sc.nextInt();
+        sc.nextLine(); // clear buffer
+
+        System.out.print("Enter data: ");
+        String data = sc.nextLine();
+
+        if (choice == 1) {
+            charStuff(data);
+        } else if (choice == 2) {
+            bitStuff(data);
+        } else {
+            System.out.println("Invalid choice!");
+        }
+
+        sc.close();
+    }
+
+    // Character Stuffing
+    static void charStuff(String data) {
+        char FLAG = '$';  // frame delimiter
+        char ESC = '\\';  // escape character
+
+        System.out.print(FLAG); // start of frame
+
+        for (char c : data.toCharArray()) {
+            if (c == FLAG || c == ESC) {
+                System.out.print(ESC); // escape FLAG or ESC
+            }
+            System.out.print(c);
+        }
+
+        System.out.println(FLAG); // end of frame
+    }
+
+    // Bit Stuffing
+    static void bitStuff(String data) {
+        String frameDelimiter = "01111110"; // commonly used
+        System.out.print(frameDelimiter); // start of frame
+
+        int count = 0;
+        for (char c : data.toCharArray()) {
+            System.out.print(c);
+            if (c == '1') {
+                count++;
+                if (count == 5) {
+                    System.out.print('0'); // stuff a 0 after five 1s
+                    count = 0;
+                }
+            } else {
+                count = 0;
+            }
+        }
+
+        System.out.println(frameDelimiter); // end of frame
+    }
+}
+
+
+CRC
+---
+import java.util.*;
+
+public class SimpleCRC {
+
+    // Performs XOR on the polynomial portion only
+    static void xor(char[] dividend, String poly) {
+        for (int i = 1; i < poly.length(); i++) {
+            dividend[i] = (dividend[i] == poly.charAt(i)) ? '0' : '1';
+        }
+    }
+
+    // Performs CRC division
+    static String computeCRC(String data, String poly) {
+        int n = poly.length();
+        char[] temp = data.substring(0, n).toCharArray();
+        int idx = n;
+
+        while (idx < data.length()) {
+            if (temp[0] == '1') {
+                xor(temp, poly);
+            }
+            // Left shift
+            for (int i = 0; i < n - 1; i++) {
+                temp[i] = temp[i + 1];
+            }
+            // Add next data bit
+            temp[n - 1] = data.charAt(idx);
+            idx++;
+        }
+
+        // Final XOR
+        if (temp[0] == '1') {
+            xor(temp, poly);
+        }
+
+        return new String(temp).substring(1);    // remainder of (n-1) bits
+    }
+
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter data to be transmitted: ");
+        String data = sc.next();
+
+        System.out.print("Enter generating polynomial: ");
+        String poly = sc.next();
+
+        int n = poly.length();
+
+        // Append (n-1) zeros
+        String paddedData = data + "0".repeat(n - 1);
+
+        System.out.println("----------------------------------------");
+        System.out.println("Padded data : " + paddedData);
+
+        // Compute CRC
+        String crc = computeCRC(paddedData, poly);
+        System.out.println("CRC value   : " + crc);
+
+        // Final data to send
+        String finalData = data + crc;
+        System.out.println("Final data to send: " + finalData);
+        System.out.println("----------------------------------------");
+
+        // Receiver side
+        System.out.print("Enter received data: ");
+        String recv = sc.next();
+
+        String recvCRC = computeCRC(recv, poly);
+
+        if (recvCRC.equals("0".repeat(n - 1))) {
+            System.out.println("No error detected.");
+        } else {
+            System.out.println("Error detected!");
+        }
+    }
+}
 
-Poll SCM: Checks for changes in Git before building.
-
-Experiment 10: Working with Minikube and Nagios
-Objective: Manage Kubernetes pods and monitor services using Nagios.
-
-Part A: Minikube (Kubernetes)
-Start Cluster: minikube start
-
-Create Deployment:
-
-kubectl create deployment mynginx --image=nginx
-
-Expose Service:
-
-kubectl expose deployment mynginx --type=NodePort --port=80 --target-port=80
-
-Scale Deployment:
-
-kubectl scale deployment mynginx --replicas=4
-
-Verify: kubectl get pods, kubectl get deployments.
-
-Part B: Nginx Port Forwarding
-Command: kubectl port-forward svc/mynginx 8081:80
-
-Access: http://localhost:8081
-
-Part C: Nagios Monitoring (Docker)
-Pull Image: docker pull jasonrivers/nagios:latest
-
-Run Container:
-
-Bash
-
-docker run --name nagiosdemo -p 8888:80 jasonrivers/nagios:latest
-Access Dashboard: http://localhost:8888
-
-Username: nagiosadmin
-
-Password: nagios
-
-Features: Monitor Hosts, Services (CPU/Memory), and Alerts.
-
-Experiment 11: Jenkins CI/CD
-Objective: Continuous Integration using Webhooks and Email Notifications.
-
-Part A: CI using Webhooks (Ngrok)
-Setup Ngrok:
-
-Download and extract Ngrok.
-
-Add Auth Token: ngrok config add-authtoken <YOUR_TOKEN>
-
-Start Tunnel: ngrok http 8081 (Assuming Jenkins runs on 8081).
-
-Copy the public HTTPS URL provided by Ngrok.
-
-Configure GitHub Webhook:
-
-Repo Settings -> Webhooks -> Add webhook.
-
-Payload URL: https://<ngrok-url>/github-webhook/
-
-Content type: application/json
-
-Event: Just the push event.
-
-Configure Jenkins Job:
-
-In Job Configuration -> Build Triggers.
-
-Select: GitHub hook trigger for GITScm polling.
-
-Outcome: Pushing code to GitHub automatically triggers the Jenkins build.
-
-Part B: Email Notifications
-Gmail Setup: Enable 2-Step Verification -> Generate App Password (select 'Other').
-
-Jenkins Configuration:
-
-Install Email Extension Plugin.
-
-Manage Jenkins -> Configure System -> E-mail Notification:
-
-SMTP Server: smtp.gmail.com
-
-Port: 465 (SSL enabled).
-
-User: Your Gmail Address.
-
-Password: The 16-digit App Password.
-
-Job Configuration:
-
-Post-build Actions: Editable Email Notification.
-
-Triggers: Select Failure, Success, etc.
-
-Recipient: Add email addresses.
-
-Experiment 12: Creation of Virtual Machine and Deployment
-Objective: Launch an Ubuntu EC2 instance on AWS and deploy a web application.
-
-Part A: Launch EC2 Instance
-Login: AWS Console -> Services -> EC2.
-
-Launch Instance:
-
-Name: ubuntu-server
-
-AMI: Ubuntu Server (Free tier eligible).
-
-Instance Type: t2.micro.
-
-Key Pair: Create new .pem file.
-
-Network: Allow HTTP/HTTPS traffic.
-
-Storage: 8GB (Default).
-
-Connect:
-
-Use SSH client in terminal: ssh -i "keyname.pem" ubuntu@<public-dns>
-
-Part B: Deploy Web Application (Docker)
-Install Docker on EC2:
-
-Bash
-
-sudo apt-get update
-sudo apt-get install docker.io
-Setup Project:
-
-git clone <YOUR_WEB_PROJECT_URL>
-
-Navigate to folder.
-
-Create/Edit Dockerfile using nano.
-
-Build and Run:
-
-Bash
-
-sudo docker build -t mywebapp .
-sudo docker run -d -p 80:80 mywebapp
-Access: Open the EC2 Instance's Public IPv4 address in a browser.
-
-Part C: Cleanup
-Stop Container: sudo docker stop <container-id>
-
-Terminate Instance: AWS Console -> Instance State -> Terminate.
-
-
-
-
-
-
-
-
-
-
-
-apt-get install sudo
-sudo apt-get install docker.io
-clone your project
-navigate to that folder(cd project folder cloned name)
-sudo docker build -t image_name .
-sudo docker run -d -p 80:80 image_name
-sudo docker images
